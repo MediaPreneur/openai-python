@@ -25,7 +25,7 @@ def _build_api_url(url, query):
     scheme, netloc, path, base_query, fragment = urlsplit(url)
 
     if base_query:
-        query = "%s&%s" % (base_query, query)
+        query = f"{base_query}&{query}"
 
     return urlunsplit((scheme, netloc, path, query, fragment))
 
@@ -48,8 +48,7 @@ def _make_session() -> requests.Session:
     if not openai.verify_ssl_certs:
         warnings.warn("verify_ssl_certs is ignored; openai always verifies.")
     s = requests.Session()
-    proxies = _requests_proxies_arg(openai.proxy)
-    if proxies:
+    if proxies := _requests_proxies_arg(openai.proxy):
         s.proxies = proxies
     s.mount(
         "https://",
@@ -93,9 +92,9 @@ class APIRequestor:
     def format_app_info(cls, info):
         str = info["name"]
         if info["version"]:
-            str += "/%s" % (info["version"],)
+            str += f'/{info["version"]}'
         if info["url"]:
-            str += " (%s)" % (info["url"],)
+            str += f' ({info["url"]})'
         return str
 
     def request(
@@ -184,9 +183,9 @@ class APIRequestor:
     def request_headers(
         self, method: str, extra, request_id: Optional[str]
     ) -> Dict[str, str]:
-        user_agent = "OpenAI/v1 PythonBindings/%s" % (version.VERSION,)
+        user_agent = f"OpenAI/v1 PythonBindings/{version.VERSION}"
         if openai.app_info:
-            user_agent += " " + self.format_app_info(openai.app_info)
+            user_agent += f" {self.format_app_info(openai.app_info)}"
 
         uname_without_node = " ".join(
             v for k, v in platform.uname()._asdict().items() if k != "node"
@@ -208,7 +207,7 @@ class APIRequestor:
             "User-Agent": user_agent,
         }
 
-        headers.update(util.api_key_to_header(self.api_type, self.api_key))
+        headers |= util.api_key_to_header(self.api_type, self.api_key)
 
         if self.organization:
             headers["OpenAI-Organization"] = self.organization
@@ -219,7 +218,7 @@ class APIRequestor:
             headers["X-Request-Id"] = request_id
         if openai.debug:
             headers["OpenAI-Debug"] = "true"
-        headers.update(extra)
+        headers |= extra
 
         return headers
 
@@ -256,11 +255,11 @@ class APIRequestor:
         stream: bool = False,
         request_id: Optional[str] = None,
     ) -> requests.Response:
-        abs_url = "%s%s" % (self.api_base, url)
+        abs_url = f"{self.api_base}{url}"
         headers = self._validate_headers(supplied_headers)
 
         data = None
-        if method == "get" or method == "delete":
+        if method in ["get", "delete"]:
             if params:
                 encoded_params = urlencode(
                     [(k, v) for k, v in params.items() if v is not None]
@@ -348,7 +347,7 @@ class APIRequestor:
             if hasattr(rbody, "decode"):
                 rbody = rbody.decode("utf-8")
             data = json.loads(rbody)
-        except (JSONDecodeError, UnicodeDecodeError):
+        except UnicodeDecodeError:
             raise error.APIError(
                 f"HTTP code {rcode} from API ({rbody})", rbody, rcode, headers=rheaders
             )

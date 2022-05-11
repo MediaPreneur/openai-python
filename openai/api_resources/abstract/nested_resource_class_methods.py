@@ -15,9 +15,9 @@ def nested_resource_class_methods(
 
     def wrapper(cls):
         def nested_resource_url(cls, id, nested_id=None):
-            url = "%s/%s/%s" % (cls.class_url(), quote_plus(id), quote_plus(path))
+            url = f"{cls.class_url()}/{quote_plus(id)}/{quote_plus(path)}"
             if nested_id is not None:
-                url += "/%s" % quote_plus(nested_id)
+                url += f"/{quote_plus(nested_id)}"
             return url
 
         resource_url_method = "%ss_url" % resource

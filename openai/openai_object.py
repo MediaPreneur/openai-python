@@ -88,8 +88,8 @@ class OpenAIObject(dict):
     # class and not as a dict, otherwise __setstate__ would not be called when
     # unpickling.
     def __reduce__(self):
-        reduce_value = (
-            type(self),  # callable
+        return (
+            type(self),
             (  # args
                 self.get("id", None),
                 self.api_key,
@@ -97,9 +97,8 @@ class OpenAIObject(dict):
                 self.api_type,
                 self.organization,
             ),
-            dict(self),  # state
+            dict(self),
         )
-        return reduce_value
 
     @classmethod
     def construct_from(
@@ -184,19 +183,7 @@ class OpenAIObject(dict):
             request_id=request_id,
         )
 
-        if stream:
-            assert not isinstance(response, OpenAIResponse)  # must be an iterator
-            return (
-                util.convert_to_openai_object(
-                    line,
-                    api_key,
-                    self.api_version,
-                    self.organization,
-                    plain_old_data=plain_old_data,
-                )
-                for line in response
-            )
-        else:
+        if not stream:
             return util.convert_to_openai_object(
                 response,
                 api_key,
@@ -204,6 +191,17 @@ class OpenAIObject(dict):
                 self.organization,
                 plain_old_data=plain_old_data,
             )
+        assert not isinstance(response, OpenAIResponse)  # must be an iterator
+        return (
+            util.convert_to_openai_object(
+                line,
+                api_key,
+                self.api_version,
+                self.organization,
+                plain_old_data=plain_old_data,
+            )
+            for line in response
+        )
 
     def __repr__(self):
         ident_parts = [type(self).__name__]
@@ -213,15 +211,9 @@ class OpenAIObject(dict):
             ident_parts.append(obj)
 
         if isinstance(self.get("id"), str):
-            ident_parts.append("id=%s" % (self.get("id"),))
+            ident_parts.append(f'id={self.get("id")}')
 
-        unicode_repr = "<%s at %s> JSON: %s" % (
-            " ".join(ident_parts),
-            hex(id(self)),
-            str(self),
-        )
-
-        return unicode_repr
+        return f'<{" ".join(ident_parts)} at {hex(id(self))}> JSON: {str(self)}'
 
     def __str__(self):
         obj = self.to_dict_recursive()

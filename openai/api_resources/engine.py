@@ -16,11 +16,12 @@ class Engine(ListableAPIResource, UpdateableAPIResource):
             try:
                 return self.request(
                     "post",
-                    self.instance_url() + "/generate",
+                    f"{self.instance_url()}/generate",
                     params,
                     stream=params.get("stream"),
                     plain_old_data=True,
                 )
+
             except TryAgain as e:
                 if timeout is not None and time.time() > start + timeout:
                     raise
@@ -31,12 +32,12 @@ class Engine(ListableAPIResource, UpdateableAPIResource):
         if self.typed_api_type == ApiType.AZURE:
             return self.request("post", self.instance_url("search"), params)
         elif self.typed_api_type == ApiType.OPEN_AI:
-            return self.request("post", self.instance_url() + "/search", params)
+            return self.request("post", f"{self.instance_url()}/search", params)
         else:
-            raise InvalidAPIType("Unsupported API type %s" % self.api_type)
+            raise InvalidAPIType(f"Unsupported API type {self.api_type}")
 
     def embeddings(self, **params):
         warnings.warn(
             "Engine.embeddings is deprecated, use Embedding.create", DeprecationWarning
         )
-        return self.request("post", self.instance_url() + "/embeddings", params)
+        return self.request("post", f"{self.instance_url()}/embeddings", params)

@@ -35,10 +35,7 @@ class bcolors:
 
 def organization_info(obj):
     organization = getattr(obj, "organization", None)
-    if organization is not None:
-        return "[organization={}] ".format(organization)
-    else:
-        return ""
+    return f"[organization={organization}] " if organization is not None else ""
 
 
 def display(obj):
@@ -49,10 +46,11 @@ def display(obj):
 
 def display_error(e):
     extra = (
-        " (HTTP status code: {})".format(e.http_status)
+        f" (HTTP status code: {e.http_status})"
         if e.http_status is not None
         else ""
     )
+
     sys.stderr.write(
         "{}{}Error:{} {}{}\n".format(
             organization_info(e), bcolors.FAIL, bcolors.ENDC, e, extra
@@ -127,9 +125,7 @@ class Engine:
             for search_result in resp["data"]
         ]
         scores.sort(reverse=True)
-        dataset = (
-            args.documents if args.documents else [x["text"] for x in resp["data"]]
-        )
+        dataset = args.documents or [x["text"] for x in resp["data"]]
         for score, document_idx in scores:
             print("=== score {:.3f} ===".format(score))
             print(dataset[document_idx])
@@ -288,10 +284,7 @@ class FineTune:
     @classmethod
     def _download_file_from_public_url(cls, url: str) -> Optional[bytes]:
         resp = requests.get(url)
-        if resp.status_code == 200:
-            return resp.content
-        else:
-            return None
+        return resp.content if resp.status_code == 200 else None
 
     @classmethod
     def _maybe_upload_file(

@@ -55,9 +55,9 @@ def plot_multiclass_precision_recall(
     ).values
 
     # For each class
-    precision = dict()
-    recall = dict()
-    average_precision = dict()
+    precision = {}
+    recall = {}
+    average_precision = {}
     for i in range(n_classes):
         precision[i], recall[i], _ = precision_recall_curve(y_true[:, i], y_score[:, i])
         average_precision[i] = average_precision_score(y_true[:, i], y_score[:, i])
@@ -123,11 +123,10 @@ def distances_from_embeddings(
         "L2": spatial.distance.euclidean,
         "Linf": spatial.distance.chebyshev,
     }
-    distances = [
+    return [
         distance_metrics[distance_metric](query_embedding, embedding)
         for embedding in embeddings
     ]
-    return distances
 
 
 def indices_of_nearest_neighbors_from_distances(distances) -> np.ndarray:
@@ -173,13 +172,16 @@ def chart_from_components(
         {
             x_title: components[:, 0],
             y_title: components[:, 1],
-            "label": labels if labels else empty_list,
-            "string": ["<br>".join(tr.wrap(string, width=30)) for string in strings]
+            "label": labels or empty_list,
+            "string": [
+                "<br>".join(tr.wrap(string, width=30)) for string in strings
+            ]
             if strings
             else empty_list,
         }
     )
-    chart = px.scatter(
+
+    return px.scatter(
         data,
         x=x_title,
         y=y_title,
@@ -188,7 +190,6 @@ def chart_from_components(
         hover_data=["string"] if strings else None,
         **kwargs,
     ).update_traces(marker=dict(size=mark_size))
-    return chart
 
 
 def chart_from_components_3D(
@@ -208,13 +209,16 @@ def chart_from_components_3D(
             x_title: components[:, 0],
             y_title: components[:, 1],
             z_title: components[:, 2],
-            "label": labels if labels else empty_list,
-            "string": ["<br>".join(tr.wrap(string, width=30)) for string in strings]
+            "label": labels or empty_list,
+            "string": [
+                "<br>".join(tr.wrap(string, width=30)) for string in strings
+            ]
             if strings
             else empty_list,
         }
     )
-    chart = px.scatter_3d(
+
+    return px.scatter_3d(
         data,
         x=x_title,
         y=y_title,
@@ -224,4 +228,3 @@ def chart_from_components_3D(
         hover_data=["string"] if strings else None,
         **kwargs,
     ).update_traces(marker=dict(size=mark_size))
-    return chart

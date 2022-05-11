@@ -3,7 +3,7 @@ from openai.openai_object import OpenAIObject
 
 class Classification(OpenAIObject):
     @classmethod
-    def get_url(self):
+    def get_url(cls):
         return "/classifications"
 
     @classmethod

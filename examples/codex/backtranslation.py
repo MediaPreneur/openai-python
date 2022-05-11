@@ -35,8 +35,7 @@ def get_candidates(
         stop=stop,
         n=n,
     )
-    responses = [priming_prefix + choice.text for choice in response.choices]
-    return responses
+    return [priming_prefix + choice.text for choice in response.choices]
 
 
 def rindex(lst: List, value: str) -> int:

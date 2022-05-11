@@ -573,10 +573,11 @@ def apply_optional_remediation(df, remediation, auto_accept):
     """
     optional_applied = False
     input_text = f"- [Recommended] {remediation.optional_msg} [Y/n]: "
-    if remediation.optional_msg is not None:
-        if accept_suggestion(input_text, auto_accept):
-            df = remediation.optional_fn(df)
-            optional_applied = True
+    if remediation.optional_msg is not None and accept_suggestion(
+        input_text, auto_accept
+    ):
+        df = remediation.optional_fn(df)
+        optional_applied = True
     if remediation.necessary_msg is not None:
         sys.stdout.write(f"- [Necessary] {remediation.necessary_msg}\n")
     return df, optional_applied
@@ -627,9 +628,7 @@ def get_outfnames(fname, split):
 
 def get_classification_hyperparams(df):
     n_classes = df.completion.nunique()
-    pos_class = None
-    if n_classes == 2:
-        pos_class = df.completion.value_counts().index[0]
+    pos_class = df.completion.value_counts().index[0] if n_classes == 2 else None
     return n_classes, pos_class
 
 
@@ -642,11 +641,11 @@ def write_out_file(df, fname, any_remediations, auto_accept):
     common_prompt_suffix = get_common_xfix(df.prompt, xfix="suffix")
     common_completion_suffix = get_common_xfix(df.completion, xfix="suffix")
 
-    split = False
     input_text = "- [Recommended] Would you like to split into training and validation set? [Y/n]: "
-    if ft_format == "classification":
-        if accept_suggestion(input_text, auto_accept):
-            split = True
+    split = bool(
+        ft_format == "classification"
+        and accept_suggestion(input_text, auto_accept)
+    )
 
     additional_params = ""
     common_prompt_suffix_new_line_handled = common_prompt_suffix.replace("\n", "\\n")
@@ -827,20 +826,18 @@ def apply_validators(
             df = apply_necessary_remediation(df, remediation)
 
     any_optional_or_necessary_remediations = any(
-        [
-            remediation
-            for remediation in optional_remediations
-            if remediation.optional_msg is not None
-            or remediation.necessary_msg is not None
-        ]
+        remediation
+        for remediation in optional_remediations
+        if remediation.optional_msg is not None
+        or remediation.necessary_msg is not None
     )
+
     any_necessary_applied = any(
-        [
-            remediation
-            for remediation in optional_remediations
-            if remediation.necessary_msg is not None
-        ]
+        remediation
+        for remediation in optional_remediations
+        if remediation.necessary_msg is not None
     )
+
     any_optional_applied = False
 
     if any_optional_or_necessary_remediations:

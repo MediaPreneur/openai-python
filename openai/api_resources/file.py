@@ -37,11 +37,11 @@ class File(ListableAPIResource, DeletableAPIResource):
 
         if typed_api_type == ApiType.AZURE:
             base = cls.class_url()
-            url = "/%s%s?api-version=%s" % (cls.azure_api_prefix, base, api_version)
+            url = f"/{cls.azure_api_prefix}{base}?api-version={api_version}"
         elif typed_api_type == ApiType.OPEN_AI:
             url = cls.class_url()
         else:
-            raise error.InvalidAPIType('Unsupported API type %s' % api_type)            
+            raise error.InvalidAPIType(f'Unsupported API type {api_type}')            
 
         # Set the filename on 'purpose' and 'model' to None so they are
         # interpreted as form data.
@@ -78,12 +78,12 @@ class File(ListableAPIResource, DeletableAPIResource):
 
         if typed_api_type == ApiType.AZURE:
             base = cls.class_url()
-            url = "/%s%s/%s/content?api-version=%s" % (cls.azure_api_prefix, base, id, api_version)
+            url = f"/{cls.azure_api_prefix}{base}/{id}/content?api-version={api_version}"
         elif typed_api_type == ApiType.OPEN_AI:
             url = f"{cls.class_url()}/{id}/content"
         else:
-            raise error.InvalidAPIType('Unsupported API type %s' % api_type)            
-        
+            raise error.InvalidAPIType(f'Unsupported API type {api_type}')            
+
         result = requestor.request_raw("get", url)
         if not 200 <= result.status_code < 300:
             raise requestor.handle_error_response(
